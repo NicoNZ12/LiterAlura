@@ -12,4 +12,8 @@ public record AuthorDTO(
         @JsonAlias("death_year")
         int deathYear
 ) {
+        @Override
+        public String toString() {
+                return authorName;
+        }
 }
