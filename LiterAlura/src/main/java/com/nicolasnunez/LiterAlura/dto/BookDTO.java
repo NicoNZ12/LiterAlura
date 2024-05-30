@@ -2,6 +2,7 @@ package com.nicolasnunez.LiterAlura.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
 
 import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -15,13 +16,5 @@ public record BookDTO(
         @JsonAlias("download_count")
         long downloads
 ) {
-        @Override
-        public String toString() {
-                return "\n----- Libro -----" +
-                        "\n Titulo: " + title +
-                        "\n Autor: " + authors.get(0) +
-                        "\n Idioma: " + languages.get(0).toUpperCase() +
-                        "\n Número de descargas: " + downloads +
-                        "\n-----------------\n";
-        }
+
 }
