@@ -41,6 +41,6 @@ public class Author {
                 "\n Fecha de Nacimiento: " + birthYear +
                 "\n Fecha de Fallecimiento: " + deathYear +
                 "\n Libros: " + books.stream().map(b -> b.getTitle()).collect(Collectors.toList()) +
-                "\n ---------------\n";
+                "\n---------------\n";
     }
 }
