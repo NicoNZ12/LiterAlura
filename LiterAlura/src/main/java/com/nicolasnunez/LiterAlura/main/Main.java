@@ -167,16 +167,13 @@ public class Main {
         System.out.println("Ingrese el año vivo del autor(es) que desea buscar: ");
         try{
             int year = sc.nextInt();
-            if(year > 0){
-                List<Author> authors = authorRepository.findAuthorBetweenYear(year);
-                if(authors.isEmpty()){
-                    System.out.println("No se encontraron registros de autores vivos durante ese año en la base de datos.");
-                }else{
-                    authors.forEach(System.out::println);
-                }
+            List<Author> authors = authorRepository.findAuthorBetweenYear(year);
+            if(authors.isEmpty()){
+                System.out.println("No se encontraron registros de autores vivos durante ese año en la base de datos.");
             }else{
-                System.out.println("No puedes ingresar un año negativo");
+                authors.forEach(System.out::println);
             }
+
         }catch (InputMismatchException e){
             System.out.println("Debes ingresar un año válido.");
         }
