@@ -131,17 +131,30 @@ public class Main {
         System.out.println("Escribe el nombre del autor que deseas buscar: ");
         String authorName = sc.nextLine();
 
-        String json = cnx.getData(API_URL + "?search=" + authorName);
-        JsonDTO results = dataConvertion.convertData(json, JsonDTO.class);
-
-        Optional<AuthorDTO> author = results.bookResults().stream()
-                .findFirst()
-                .map(a -> new AuthorDTO(a.authors().get(0).authorName(), a.authors().get(0).birthYear(), a.authors().get(0).deathYear()));
-
-        if(author.isPresent()){
-            System.out.println(author.get());
+        if(isNumber(authorName)){
+            System.out.println("Debes ingresar un nombre, no un número.");
         }else{
-            System.out.println("No se encontró autor con el nombre: " + authorName);
+            String json = cnx.getData(API_URL + "?search=" + authorName.replace(" ", "+"));
+            JsonDTO results = dataConvertion.convertData(json, JsonDTO.class);
+
+            Optional<AuthorDTO> author = results.bookResults().stream()
+                    .findFirst()
+                    .map(a -> new AuthorDTO(a.authors().get(0).authorName(), a.authors().get(0).birthYear(), a.authors().get(0).deathYear()));
+
+            if(author.isPresent()){
+                System.out.println(author.get());
+            }else{
+                System.out.println("No se encontró autor con el nombre: " + authorName);
+            }
+        }
+    }
+
+    private boolean isNumber(String authorName) {
+        try {
+            Double.parseDouble(authorName);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
         }
     }
 
@@ -150,21 +163,23 @@ public class Main {
         authors.forEach(System.out::println);
     }
 
-    //TODO: manejo de excepciones de las funciones: getAuthorBetweenYears() -> cuando se ingresa una letra en vez de un año.
     private void getAuthorBetweenYears(){
         System.out.println("Ingrese el año vivo del autor(es) que desea buscar: ");
-        int year = Integer.parseInt(sc.nextLine());
+        try{
+            int year = sc.nextInt();
+            List<Author> authors = authorRepository.findAuthorBetweenYear(year);
+            if(authors.isEmpty()){
+                System.out.println("No se encontraron registros de autores vivos durante ese año en la base de datos.");
+            }else{
+                authors.forEach(System.out::println);
+            }
 
-        List<Author> authors = authorRepository.findAuthorBetweenYear(year);
-        if(authors.isEmpty()){
-            System.out.println("No se encontraron registros de autores vivos durante ese año en la base de datos.");
-        }else{
-            authors.forEach(System.out::println);
+        }catch (InputMismatchException e){
+            System.out.println("Debes ingresar un año válido.");
         }
-
+        sc.nextLine();
     }
 
-    //TODO: manejo de excepciones -> cuando se ingresa otra cosa que no sea esos 4 idiomas.
     private void getBooksByLanguage(){
         System.out.println("Ingrese el idioma que desea buscar: ");
         System.out.println("""
@@ -195,6 +210,6 @@ public class Main {
                 .collect(Collectors.toList());
 
         top10Books.stream()
-                .forEach(b -> System.out.println(b.getTitle() + " : " + b.getDownloads_count() + " descargas\n"));
+                .forEach(b -> System.out.println(b.getTitle() + " : (" + b.getDownloads_count() + " descargas)\n"));
     }
 }

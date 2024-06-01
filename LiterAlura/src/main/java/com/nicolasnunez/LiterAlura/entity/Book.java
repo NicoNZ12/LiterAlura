@@ -34,7 +34,7 @@ public class Book {
 
     @Override
     public String toString() {
-        return "\n----- Libro -----" +
+        return "----- Libro -----" +
                 "\n Titulo: " + title +
                 "\n Autor: " + author.getName() +
                 "\n Idioma: " + language +
