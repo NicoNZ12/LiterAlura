@@ -1,8 +1,6 @@
 package com.nicolasnunez.LiterAlura.main;
 
-
 import com.nicolasnunez.LiterAlura.dto.AuthorDTO;
-import com.nicolasnunez.LiterAlura.dto.BookDTO;
 import com.nicolasnunez.LiterAlura.dto.JsonDTO;
 
 import com.nicolasnunez.LiterAlura.entity.Author;
@@ -11,20 +9,18 @@ import com.nicolasnunez.LiterAlura.repository.IAuthorRepository;
 import com.nicolasnunez.LiterAlura.repository.IbookRepository;
 import com.nicolasnunez.LiterAlura.service.ConnectionAPI;
 import com.nicolasnunez.LiterAlura.service.DataConvertion;
-import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
+
+import java.util.*;
 import java.util.stream.Collectors;
+
 
 public class Main {
     private Scanner sc = new Scanner(System.in);
     private ConnectionAPI cnx = new ConnectionAPI();
     private DataConvertion dataConvertion = new DataConvertion();
-    private static final String API_URL = "https://gutendex.com/books";
+    private static final String API_URL = "https://gutendex.com/books/";
 
     private IbookRepository bookRepository;
     private IAuthorRepository authorRepository;
@@ -42,9 +38,11 @@ public class Main {
             System.out.println("""
                     1. Buscar libro por título
                     2. Listar libros registrados
-                    3. Listar autores registrados
-                    4. Listar autores vivos en un determinado año
-                    5. Listar libros por idioma
+                    3. Buscar autor por nombre
+                    4. Listar autores registrados
+                    5. Listar autores vivos en un determinado año
+                    6. Listar libros por idioma
+                    7. Top 10 libros más descargados
                     0. Salir
                     """);
 
@@ -60,14 +58,21 @@ public class Main {
                         getAllListedBooks();
                         break;
                     case 3:
+                        getAuthorByName();
+                        break;
+                    case 4:
                         System.out.println("----- Autores Registrados -----\n");
                         getListedAuthors();
                         break;
-                    case 4:
+                    case 5:
                         getAuthorBetweenYears();
                         break;
-                    case 5:
+                    case 6:
                         getBooksByLanguage();
+                        break;
+                    case 7:
+                        System.out.println("----- Top 10 libros más descargados -----\n");
+                        getTop10Books();
                         break;
                     case 0:
                         System.out.println("Gracias por usar LiterAlura!\n");
@@ -85,7 +90,7 @@ public class Main {
         System.out.println("Escriba el nombre del libro: ");
         String bookName = sc.nextLine();
 
-        String json = cnx.getData(API_URL + "/?search=" + bookName.replace(" ", "+"));
+        String json = cnx.getData(API_URL + "?search=" + bookName.replace(" ", "+"));
         JsonDTO results = dataConvertion.convertData(json, JsonDTO.class);
 
         Optional<Book> books = results.bookResults().stream()
@@ -122,20 +127,44 @@ public class Main {
         books.forEach(System.out::println);
     }
 
+    private void getAuthorByName(){
+        System.out.println("Escribe el nombre del autor que deseas buscar: ");
+        String authorName = sc.nextLine();
+
+        String json = cnx.getData(API_URL + "?search=" + authorName);
+        JsonDTO results = dataConvertion.convertData(json, JsonDTO.class);
+
+        Optional<AuthorDTO> author = results.bookResults().stream()
+                .findFirst()
+                .map(a -> new AuthorDTO(a.authors().get(0).authorName(), a.authors().get(0).birthYear(), a.authors().get(0).deathYear()));
+
+        if(author.isPresent()){
+            System.out.println(author.get());
+        }else{
+            System.out.println("No se encontró autor con el nombre: " + authorName);
+        }
+    }
+
     private void getListedAuthors(){
         List<Author> authors = authorRepository.findAll();
         authors.forEach(System.out::println);
     }
 
+    //TODO: manejo de excepciones de las funciones: getAuthorBetweenYears() -> cuando se ingresa una letra en vez de un año.
     private void getAuthorBetweenYears(){
         System.out.println("Ingrese el año vivo del autor(es) que desea buscar: ");
         int year = Integer.parseInt(sc.nextLine());
 
         List<Author> authors = authorRepository.findAuthorBetweenYear(year);
-        authors.forEach(System.out::println);
+        if(authors.isEmpty()){
+            System.out.println("No se encontraron registros de autores vivos durante ese año en la base de datos.");
+        }else{
+            authors.forEach(System.out::println);
+        }
 
     }
 
+    //TODO: manejo de excepciones -> cuando se ingresa otra cosa que no sea esos 4 idiomas.
     private void getBooksByLanguage(){
         System.out.println("Ingrese el idioma que desea buscar: ");
         System.out.println("""
@@ -144,9 +173,28 @@ public class Main {
                 fr -> Francés
                 pt -> Portugés
                 """);
-        String language = sc.nextLine();
 
-        List<Book> books = bookRepository.findBookByLanguage(language.toUpperCase());
-        books.forEach(System.out::println);
+            String language = sc.nextLine();
+
+            List<Book> books = bookRepository.findBookByLanguage(language.toUpperCase());
+            if(books.isEmpty()){
+                System.out.println("No se encontraron libros en ese idioma");
+            }else{
+                books.forEach(System.out::println);
+            }
+    }
+
+    private void getTop10Books(){
+        String json = cnx.getData(API_URL);
+        JsonDTO results = dataConvertion.convertData(json, JsonDTO.class);
+
+        List<Book> top10Books = results.bookResults().stream()
+                .map(b -> new Book(b))
+                .sorted(Comparator.comparingLong(Book::getDownloads_count).reversed())
+                .limit(10)
+                .collect(Collectors.toList());
+
+        top10Books.stream()
+                .forEach(b -> System.out.println(b.getTitle() + " : " + b.getDownloads_count() + " descargas\n"));
     }
 }

@@ -1,7 +1,6 @@
 package com.nicolasnunez.LiterAlura.entity;
 
 import com.nicolasnunez.LiterAlura.dto.AuthorDTO;
-import com.nicolasnunez.LiterAlura.dto.BookDTO;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;

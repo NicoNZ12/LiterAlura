@@ -2,6 +2,7 @@ package com.nicolasnunez.LiterAlura.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 
+
 public record AuthorDTO(
         @JsonAlias("name")
         String authorName,
@@ -14,6 +15,10 @@ public record AuthorDTO(
 ) {
         @Override
         public String toString() {
-                return authorName;
+                return "----- Autor -----" +
+                        "\n Nombre: " + authorName +
+                        "\n Fecha de Nacimiento: " + birthYear +
+                        "\n Fecha de Fallecimiento: " + deathYear +
+                        "\n ---------------\n";
         }
 }
